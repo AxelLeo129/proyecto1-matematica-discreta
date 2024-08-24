@@ -1,35 +1,152 @@
 import time
 
-def char_to_bit(c):
+def union(set1, set2):
     """
-    Convierte un carácter en su correspondiente bit en una máscara de bits.
+    Realiza la unión de dos conjuntos.
+    
+    Args:
+        set1 (list): Primer conjunto representado como lista.
+        set2 (list): Segundo conjunto representado como lista.
 
-    Parámetros:
-    c (str): Un carácter que puede ser una letra (A-Z) o un dígito numérico (0-9).
-
-    Retorna:
-    int: Un entero que representa el bit correspondiente al carácter.
+    Returns:
+        list: Una lista que contiene la unión de los dos conjuntos, sin elementos duplicados.
     """
-    return 1 << (ord(c) - ord('A') if 'A' <= c <= 'Z' else ord(c) - ord('0') + 26)
+    result = set1[:]
+    for elem in set2:
+        if elem not in result:
+            result.append(elem)
+    return result
 
-def set_to_bitmask(s):
+def intersection(set1, set2):
     """
-    Convierte un conjunto de caracteres en una máscara de bits.
+    Realiza la intersección de dos conjuntos.
+    
+    Args:
+        set1 (list): Primer conjunto representado como lista.
+        set2 (list): Segundo conjunto representado como lista.
 
-    Parámetros:
-    s (str): Una cadena de caracteres que contiene letras (A-Z) y/o dígitos (0-9).
-
-    Retorna:
-    int: Un entero que representa la máscara de bits del conjunto de caracteres.
+    Returns:
+        list: Una lista que contiene la intersección de los dos conjuntos.
     """
-    return sum(char_to_bit(c) for c in s)
+    result = []
+    for elem in set1:
+        if elem in set2:
+            result.append(elem)
+    return result
 
-universe = set_to_bitmask("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+def difference(set1, set2):
+    """
+    Realiza la diferencia entre dos conjuntos (set1 - set2).
+    
+    Args:
+        set1 (list): Primer conjunto representado como lista.
+        set2 (list): Segundo conjunto representado como lista.
+
+    Returns:
+        list: Una lista que contiene la diferencia de los dos conjuntos.
+    """
+    result = []
+    for elem in set1:
+        if elem not in set2:
+            result.append(elem)
+    return result
+
+def symmetric_difference_multiple(conjuntos):
+    """
+    Realiza la diferencia simétrica entre múltiples conjuntos.
+    
+    Args:
+        conjuntos (list of lists): Lista de listas donde cada lista representa un conjunto.
+
+    Returns:
+        list: Una lista que contiene la diferencia simétrica entre todos los conjuntos.
+    """
+    # Crear un diccionario para contar la cantidad de veces que aparece cada elemento
+    element_counts = {}
+    for conjunto in conjuntos:
+        for elemento in conjunto:
+            if elemento in element_counts:
+                element_counts[elemento] += 1
+            else:
+                element_counts[elemento] = 1
+    
+    # Incluir en el resultado solo los elementos que aparecen un número impar de veces
+    result = []
+    for elemento, count in element_counts.items():
+        if count == 1:
+            result.append(elemento)
+            
+    return result
+
+def complemento(universe, conjunto):
+    """
+    Calcula el complemento de un conjunto con respecto a un universo.
+    
+    Args:
+        universe (list): El universo de elementos (A-Z, 0-9).
+        conjunto (list): Conjunto a complementar.
+
+    Returns:
+        list: Una lista que contiene el complemento del conjunto.
+    """
+    result = []
+    for elem in universe:
+        if elem not in conjunto:
+            result.append(elem)
+    return result
+
+def construir_conjuntos(conjuntos, universe):
+    """
+    Permite al usuario construir un conjunto de elementos.
+
+    Args:
+        conjuntos (dict): Diccionario donde se almacenan los conjuntos.
+        universe (list): El universo de elementos válidos (A-Z, 0-9).
+    """
+    nombre = input("Nombre del conjunto: ")
+    elementos = input("Ingresa los elementos separados por comas (A-Z, 0-9): ").upper().replace(" ", "")
+    validos = list(universe)
+    elementos_filtrados = [e for e in elementos.split(',') if e in validos]
+    if len(elementos_filtrados) < len(elementos.split(',')):
+        print("Algunos elementos ingresados no son válidos y han sido excluidos. Vuelve a crear el conjunto.")
+        return
+    
+    conjunto = sorted(set(elementos_filtrados))
+    conjuntos[nombre] = conjunto
+    print(f"Conjunto {nombre} creado: {format_as_set_notation(conjunto)}")
+
+def format_as_set_notation(char_set):
+    """
+    Formatea una lista de caracteres como una notación de conjunto.
+    
+    Args:
+        char_set (list): Lista de caracteres a formatear.
+
+    Returns:
+        str: Una cadena que representa la lista en notación de conjunto.
+    """
+    return "{" + ", ".join(char_set) + "}"
+
+def mostrar_resultado(conjuntos, result, operacion):
+    """
+    Muestra el resultado de una operación en notación de conjunto.
+    
+    Args:
+        conjuntos (dict): Diccionario de conjuntos existentes.
+        result (list): Lista de elementos resultantes de la operación.
+        operacion (str): Nombre de la operación realizada.
+    """
+    formatted_result = format_as_set_notation(sorted(set(result)))
+    for set_name, conjunto in conjuntos.items():
+        print(f"{set_name}: {format_as_set_notation(sorted(set(conjunto)))}")
+    print(f'Resultado de {operacion.lower()}: {formatted_result}')
+    time.sleep(2)
 
 def menu():
     """
-    Muestra el menú principal para que el usuario construya conjuntos, realice operaciones entre ellos o finalice el programa.
+    Muestra el menú principal del programa y gestiona la interacción con el usuario.
     """
+    universe = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
     conjuntos = {}
     while True:
         print("\nMenú Principal")
@@ -39,37 +156,22 @@ def menu():
         opcion = input("Elige una opción: ")
         
         if opcion == "1":
-            construir_conjuntos(conjuntos)
+            construir_conjuntos(conjuntos, universe)
         elif opcion == "2":
-            subMenu(conjuntos)
+            subMenu(conjuntos, universe)
         elif opcion == "3":
             print("Programa finalizado.")
             break
         else:
             print("Opción no válida. Intenta nuevamente.")
 
-def mostrar_resultado(conjuntos, bitmask, operacion):
+def subMenu(conjuntos, universe):
     """
-    Muestra el resultado de una operación en notación de conjuntos.
-
-    Parámetros:
-    conjuntos (dict): Un diccionario con los nombres de los conjuntos como claves y sus máscaras de bits como valores.
-    bitmask (int): La máscara de bits resultante de la operación realizada.
-    operacion (str): El nombre de la operación realizada, como "Unión" o "Intersección".
-    """
-    result_chars = bitmask_to_set(bitmask)
-    formatted_result = format_as_set_notation(result_chars)
-    for set_name, bitmask in conjuntos.items():
-        print(f"{set_name}: {format_as_set_notation(bitmask_to_set(bitmask))}")
-    print(f'Resultado de {operacion.lower()}: {formatted_result}')
-    time.sleep(2)
-
-def subMenu(conjuntos):
-    """
-    Muestra un submenú para elegir una operación a realizar entre los conjuntos creados.
-
-    Parámetros:
-    conjuntos (dict): Un diccionario con los nombres de los conjuntos como claves y sus máscaras de bits como valores.
+    Muestra el submenú para realizar operaciones entre los conjuntos y gestiona la interacción con el usuario.
+    
+    Args:
+        conjuntos (dict): Diccionario de conjuntos existentes.
+        universe (list): El universo de elementos válidos (A-Z, 0-9).
     """
     while True:
         print("\nElige qué operación hacer con los conjuntos ingresados:")
@@ -82,91 +184,53 @@ def subMenu(conjuntos):
         opcion = input("Elige una opción: ")
 
         if opcion == "1":
-            union_bitmask = 0
-            for bitmask in conjuntos.values():
-                union_bitmask |= bitmask
-            complement_union = universe & ~union_bitmask
-
-            mostrar_resultado(conjuntos=conjuntos, bitmask=complement_union, operacion="Complemento")
+            if len(conjuntos) >= 2:
+                conjunto_names = list(conjuntos.keys())
+                result = conjuntos[conjunto_names[0]]
+                for name in conjunto_names[1:]:
+                    result = union(result, conjuntos[name])
+                complement_result = complemento(universe, result)
+                mostrar_resultado(conjuntos, complement_result, "Complemento")    
+            else:
+                print("Se necesitan al menos 2 conjuntos para realizar esta operación.")
         elif opcion == "2":
-            union_bitmask = 0
-            for bitmask in conjuntos.values():
-                union_bitmask |= bitmask
-
-            mostrar_resultado(conjuntos=conjuntos, bitmask=union_bitmask, operacion="Unión")
+            if len(conjuntos) >= 2:
+                conjunto_names = list(conjuntos.keys())
+                result = conjuntos[conjunto_names[0]]
+                for name in conjunto_names[1:]:
+                    result = union(result, conjuntos[name])
+                mostrar_resultado(conjuntos, result, "Unión")
+            else:
+                print("Se necesitan al menos 2 conjuntos para realizar esta operación.")
         elif opcion == "3":
-            intersection_bitmask = None
-            for bitmask in conjuntos.values():
-                if intersection_bitmask is None:
-                    intersection_bitmask = bitmask
-                else:
-                    intersection_bitmask &= bitmask
-
-            mostrar_resultado(conjuntos=conjuntos, bitmask=intersection_bitmask, operacion="Intersección")
+            if len(conjuntos) >= 2:
+                conjunto_names = list(conjuntos.keys())
+                result = conjuntos[conjunto_names[0]]
+                for name in conjunto_names[1:]:
+                    result = intersection(result, conjuntos[name])
+                mostrar_resultado(conjuntos, result, "Intersección")
+            else:
+                print("Se necesitan al menos 2 conjuntos para realizar esta operación.")
         elif opcion == "4":
-            difference_bitmask = None
-            for bitmask in conjuntos.values():
-                if difference_bitmask is None:
-                    difference_bitmask = bitmask
-                else:
-                    difference_bitmask &= ~bitmask
-
-            mostrar_resultado(conjuntos=conjuntos, bitmask=difference_bitmask, operacion="Diferencia")
+            if len(conjuntos) >= 2:
+                conjunto_names = list(conjuntos.keys())
+                result = conjuntos[conjunto_names[0]]
+                for name in conjunto_names[1:]:
+                    result = difference(result, conjuntos[name])
+                mostrar_resultado(conjuntos, result, "Diferencia")
+            else:
+                print("Se necesitan al menos 2 conjuntos para realizar esta operación.")
         elif opcion == "5":
-            symmetric_difference_bitmask = 0
-            for bitmask in conjuntos.values():
-                symmetric_difference_bitmask ^= bitmask
-
-            mostrar_resultado(conjuntos=conjuntos, bitmask=symmetric_difference_bitmask, operacion="Diferencia Simétrica")
+            if len(conjuntos) >= 2:
+                result = symmetric_difference_multiple(conjuntos.values())
+                mostrar_resultado(conjuntos, result, "Diferencia Simétrica")
+            else:
+                print("Se necesitan al menos 2 conjuntos para realizar esta operación.")
         elif opcion == "6":
             print("Programa finalizado.")
             break
         else:
             print("Opción no válida. Intenta nuevamente.")
-
-def construir_conjuntos(conjuntos):
-    """
-    Permite al usuario crear un conjunto y almacenarlo en el diccionario de conjuntos.
-
-    Parámetros:
-    conjuntos (dict): Un diccionario con los nombres de los conjuntos como claves y sus máscaras de bits como valores.
-    """
-    nombre = input("Nombre del conjunto: ")
-    elementos = input("Ingresa los elementos separados por comas (A-Z, 0-9): ").upper().replace(" ", "")
-    validos = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-    elementos_filtrados = [e for e in elementos.split(',') if e in validos]
-    if len(elementos_filtrados) < len(elementos.split(',')):
-        print("Algunos elementos ingresados no son válidos y han sido excluidos. Vuelve a crear el conjunto.")
-        return
-    
-    conjunto = ''.join(sorted(set(elementos_filtrados)))
-    conjuntos[nombre] = set_to_bitmask(conjunto)
-    print(f"Conjunto {nombre} creado: {format_as_set_notation(conjunto)}")
-
-def format_as_set_notation(char_set):
-    """
-    Formatea un conjunto de caracteres en notación de conjunto.
-
-    Parámetros:
-    char_set (str): Una cadena que representa un conjunto de caracteres.
-
-    Retorna:
-    str: La representación del conjunto en notación de conjunto, e.g., "{A, B, C}".
-    """
-    return "{" + ", ".join(sorted(char_set)) + "}"
-
-def bitmask_to_set(bitmask):
-    """
-    Convierte una máscara de bits en un conjunto de caracteres.
-
-    Parámetros:
-    bitmask (int): Un entero que representa una máscara de bits.
-
-    Retorna:
-    str: Una cadena que contiene los caracteres representados en la máscara de bits.
-    """
-    chars = [chr(i + ord('A')) if i < 26 else chr(i - 26 + ord('0')) for i in range(36) if bitmask & (1 << i)]
-    return ''.join(chars)
 
 # Ejecutar el programa
 menu()
